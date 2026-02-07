@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>For You ❤️</title>
+    
+    <!-- React & Babel -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Quicksand:wght@400;600;700&family=Playfair+Display:wght@600;800&display=swap" rel="stylesheet">
+
+    <style>
+        body { 
+            font-family: 'Quicksand', sans-serif; 
+            background: linear-gradient(to bottom, #fff1f2, #ffe4e6);
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        h1, h2 { font-family: 'Playfair Display', serif; }
+        .handwriting { font-family: 'Dancing Script', cursive; }
+        
+        /* Animations */
+        @keyframes float {
+            0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+            50% { opacity: 0.6; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+        .animate-float { animation: float 15s linear infinite; }
+
+        @keyframes fall {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+        .animate-fall { animation: fall 4s linear forwards; }
+        
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        .animate-heartbeat { animation: heartbeat 1.5s infinite ease-in-out; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fadeIn 0.8s ease-out forwards; }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- ICONS ---
+        const Heart = ({ size = 24, className, fill }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill={fill || "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+        );
+        const XIcon = ({ size = 24 }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 18 18"/></svg>
+        );
+        const MusicIcon = ({ size = 20 }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        );
+
+        // --- MAIN APP ---
+        const App = () => {
+            const [view, setView] = useState('proposal'); 
+            const [noBtnStyle, setNoBtnStyle] = useState({});
+            const [showLetter, setShowLetter] = useState(false);
+            const [isPlaying, setIsPlaying] = useState(false);
+            const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+            const [kisses, setKisses] = useState([]);
+            const audioRef = useRef(null);
+
+            useEffect(() => {
+                const timer = setInterval(() => {
+                    const now = new Date();
+                    const currentYear = now.getFullYear();
+                    let target = new Date(`${currentYear}-02-14T00:00:00`);
+                    if (now > target) target.setFullYear(currentYear + 1);
+                    
+                    const diff = target - now;
+                    if (diff > 0) {
+                        setTimeLeft({
+                            days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+                            hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+                            minutes: Math.floor((diff / 1000 / 60) % 60),
+                            seconds: Math.floor((diff / 1000) % 60)
+                        });
+                    }
+                }, 1000);
+                return () => clearInterval(timer);
+            }, []);
+
+            const moveNoButton = () => {
+                const x = Math.random() * (window.innerWidth - 120);
+                const y = Math.random() * (window.innerHeight - 60);
+                setNoBtnStyle({ position: 'fixed', left: `${x}px`, top: `${y}px`, zIndex: 50 });
+            };
+
+            const handleYes = () => {
+                if (audioRef.current) {
+                    audioRef.current.volume = 0.6;
+                    audioRef.current.play()
+                        .then(() => setIsPlaying(true))
+                        .catch(e => console.log("Audio play prevented"));
+                }
+                setView('celebration');
+                window.scrollTo(0, 0);
+            };
+
+            const toggleMusic = () => {
+                if(!audioRef.current) return;
+                if(isPlaying) {
+                    audioRef.current.pause();
+                    setIsPlaying(false);
+                } else {
+                    audioRef.current.play();
+                    setIsPlaying(true);
+                }
+            };
+
+            const triggerKiss = () => {
+                const newKisses = Array.from({ length: 15 }).map((_, i) => ({
+                    id: Date.now() + i,
+                    left: Math.random() * 90,
+                    emoji: ['💋', '😽', '❤️', '😘'][Math.floor(Math.random() * 4)],
+                    duration: 3 + Math.random() * 2
+                }));
+                setKisses(prev => [...prev, ...newKisses]);
+                setTimeout(() => setKisses(prev => prev.slice(15)), 4000);
+            };
+
+            // PROPOSAL SCREEN
+            if (view === 'proposal') {
+                return (
+                    <div className="min-h-screen flex flex-col items-center justify-center p-4 text-center relative overflow-hidden bg-gradient-to-br from-pink-50 to-red-100">
+                        <div className="fixed inset-0 pointer-events-none">
+                            {[...Array(20)].map((_, i) => (
+                                <div key={i} className="absolute text-pink-300/60 animate-float" 
+                                     style={{
+                                         left: `${Math.random()*100}%`, 
+                                         fontSize: `${Math.random()*20+10}px`, 
+                                         animationDuration: `${Math.random()*10+10}s`,
+                                         animationDelay: `${Math.random()*5}s`
+                                     }}>❤</div>
+                            ))}
+                        </div>
+
+                        <div className="z-10 bg-white/60 backdrop-blur-md p-8 rounded-3xl shadow-xl max-w-md w-full border border-white animate-fade-in">
+                            <img src="https://media.tenor.com/fTTVgygGDh8AAAAi/cute-cat.gif" className="w-48 h-48 mx-auto mb-4 object-contain" alt="Cat" />
+                            <h1 className="text-4xl md:text-6xl font-bold text-red-600 mb-6 drop-shadow-sm leading-tight">Be My Valentine?</h1>
+                            <p className="text-gray-700 text-lg mb-10 font-medium leading-relaxed">I don't need a thousand reasons to smile,<br/>I just need <span className="text-red-500 font-bold">You.</span></p>
+                            <div className="flex flex-col gap-4 items-center w-full">
+                                <button onClick={handleYes} className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xl font-bold py-4 px-12 rounded-full shadow-lg hover:scale-110 transition-transform animate-heartbeat w-full md:w-auto">YES, Forever! ❤️</button>
+                                <button onMouseEnter={moveNoButton} onTouchStart={moveNoButton} style={noBtnStyle} className="bg-white text-gray-500 border-2 border-gray-200 text-lg font-bold py-3 px-10 rounded-full transition-all w-full md:w-auto hover:bg-gray-100">No</button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // CELEBRATION SCREEN
+            return (
+                <div className="min-h-screen p-4 pb-20 relative bg-pink-50">
+                    <audio ref={audioRef} loop src="https://cdn.pixabay.com/download/audio/2022/10/14/audio_9939f792cb.mp3?filename=romantic-piano-123493.mp3"></audio>
+                    
+                    {/* Floating Kisses */}
+                    <div className="fixed inset-0 pointer-events-none z-50">
+                        {kisses.map(k => (
+                            <div key={k.id} className="absolute animate-fall" style={{ left: `${k.left}%`, top: '-50px', fontSize: '30px', animationDuration: `${k.duration}s` }}>
+                                {k.emoji}
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Kiss Button */}
+                    <div className="fixed bottom-6 right-6 z-40">
+                         <button onClick={triggerKiss} className="bg-white p-4 rounded-full shadow-2xl text-3xl border-4 border-pink-200 hover:scale-110 transition-transform active:scale-90 animate-bounce">
+                            💋
+                         </button>
+                    </div>
+
+                    {/* Music Control */}
+                    <button onClick={toggleMusic} className={`fixed top-4 right-4 z-50 px-4 py-2 rounded-full shadow-md flex items-center gap-2 transition-all ${isPlaying ? 'bg-red-500 text-white animate-pulse' : 'bg-white text-gray-600'}`}>
+                        <MusicIcon /> {isPlaying ? 'Playing' : 'Play Music'}
+                    </button>
+
+                    <div className="text-center mt-12 mb-8 animate-fade-in">
+                        <div className="flex justify-center mb-4">
+                             <img src="https://media.tenor.com/M09B98G5m8AAAAi/cat-dance.gif" className="w-32 h-32 object-contain" alt="Dance" />
+                        </div>
+                        <h1 className="text-5xl font-bold text-red-600 mb-2">YAAAY! ❤️</h1>
+                        <p className="text-gray-600 font-medium">Best decision you ever made!</p>
+                    </div>
+
+                    {/* ENVELOPE */}
+                    <div className="flex justify-center mb-12 animate-fade-in" style={{animationDelay: '0.2s'}}>
+                        <div onClick={() => setShowLetter(true)} className="relative w-64 h-40 bg-red-600 rounded-lg shadow-xl cursor-pointer hover:scale-105 transition-transform flex items-center justify-center">
+                            <div className="absolute top-0 left-0 right-0 h-0 border-l-[128px] border-r-[128px] border-t-[90px] border-l-transparent border-r-transparent border-t-red-500 rounded-t-lg"></div>
+                            <div className="absolute top-[-20px] bg-white p-2 rounded-full shadow-md z-10 animate-bounce">
+                                <Heart size={24} className="text-red-500 fill-red-500" />
+                            </div>
+                            <p className="text-white font-bold mt-10 z-10">Click to Open Letter</p>
+                        </div>
+                    </div>
+
+                    {/* LETTER POPUP */}
+                    {showLetter && (
+                        <div className="fixed inset-0 bg-black/70 z-[100] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
+                            <div className="bg-white rounded-2xl p-6 md:p-8 max-w-md w-full relative shadow-2xl border-4 border-pink-100 max-h-[90vh] overflow-y-auto">
+                                <button onClick={() => setShowLetter(false)} className="absolute top-3 right-3 p-2 bg-gray-100 rounded-full hover:bg-red-100 text-gray-500 hover:text-red-500 transition-colors"><XIcon size={24}/></button>
+                                <div className="text-center">
+                                    <Heart className="mx-auto text-red-500 fill-red-500 mb-4 animate-pulse" size={48} />
+                                    <h2 className="text-3xl font-bold font-serif mb-6 text-gray-800 border-b pb-4">My Dearest,</h2>
+                                    <div className="text-gray-700 leading-loose handwriting text-2xl mb-8 space-y-4">
+                                        <p>"Tere chehre ki muskan mere dil ka chain hai,<br/>Tujhse milna hi mere din ka sabse pyara rain hai."</p>
+                                        <p>Every moment with you is a treasure. I promise to make this Valentine's week as special as you are to me.</p>
+                                    </div>
+                                    <div className="mt-8">
+                                        <p className="font-bold text-red-500 text-lg uppercase tracking-widest">Yours Forever,</p>
+                                        <p className="text-gray-400 text-sm mt-2">Me ❤️</p>
+                                    </div>
+                                    <button onClick={() => setShowLetter(false)} className="mt-8 w-full bg-red-500 text-white font-bold py-3 rounded-xl shadow-lg hover:bg-red-600 transition-colors">Close Letter</button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* COUNTDOWN */}
+                    <div className="bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-xl mb-10 mx-2 border border-white animate-fade-in" style={{animationDelay: '0.4s'}}>
+                        <h3 className="text-center text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Countdown to V-Day</h3>
+                        <div className="grid grid-cols-4 gap-2 text-center">
+                            <TimeBox val={timeLeft.days} label="Days" />
+                            <TimeBox val={timeLeft.hours} label="Hrs" />
+                            <TimeBox val={timeLeft.minutes} label="Mins" />
+                            <TimeBox val={timeLeft.seconds} label="Secs" />
+                        </div>
+                    </div>
+
+                    {/* COUPONS */}
+                    <div className="mx-2 mb-10 animate-fade-in" style={{animationDelay: '0.6s'}}>
+                        <h2 className="text-3xl font-bold text-center text-red-600 mb-6 font-serif">Love Coupons</h2>
+                        <div className="grid gap-4">
+                            <Coupon title="Dinner Date" icon="🍽️" desc="My treat, your choice." />
+                            <Coupon title="Back Massage" icon="💆" desc="20 mins relaxation." />
+                            <Coupon title="Yes Day" icon="✨" desc="I say YES to everything." />
+                        </div>
+                    </div>
+
+                    {/* WHY I LOVE YOU */}
+                    <ReasonGenerator />
+
+                    {/* TIMELINE WITH SHAYARI */}
+                    <div className="mx-2 pb-10 animate-fade-in" style={{animationDelay: '0.8s'}}>
+                        <h2 className="text-3xl font-bold text-center text-red-600 mb-6 font-serif">Our Week</h2>
+                        <div className="space-y-4">
+                            <TimelineItem date="Feb 7" title="Rose Day" icon="🌹" shayari="Phool khilte hain baharon mein..." desc="Sending you a bunch of roses to say: You are precious." />
+                            <TimelineItem date="Feb 8" title="Propose Day" icon="💍" shayari="Dil ko churaya hai tune..." desc="Expressing my feelings to you, officially." />
+                            <TimelineItem date="Feb 9" title="Chocolate Day" icon="🍫" shayari="Zindagi mein mithaas teri baaton se hai." desc="Life is sweeter with you." />
+                            <TimelineItem date="Feb 10" title="Teddy Day" icon="🧸" shayari="Soft like a teddy, sweet like you." desc="Something cute to cuddle when I'm away." />
+                            <TimelineItem date="Feb 11" title="Promise Day" icon="🤞" shayari="Vaada raha pyaar se pyaar ka." desc="I promise to be your biggest supporter, always." />
+                            <TimelineItem date="Feb 12" title="Hug Day" icon="🤗" shayari="Sirf ek baar gale lag kar..." desc="A warm hug to melt all worries away." />
+                            <TimelineItem date="Feb 13" title="Kiss Day" icon="💋" shayari="Tere hothon ki hansi hi meri zindagi hai." desc="Sealing our promise with love." />
+                            <TimelineItem date="Feb 14" title="Valentine's Day" icon="❤️" shayari="You are my today and all of my tomorrows." desc="The big day! Just you and me." highlight />
+                        </div>
+                    </div>
+
+                    <p className="text-center text-red-300 text-xs py-6">Made with Love 💖</p>
+                </div>
+            );
+        };
+
+        // --- SUB COMPONENTS ---
+        const TimeBox = ({val, label}) => (
+            <div className="bg-gradient-to-b from-red-400 to-red-600 text-white rounded-xl p-3 shadow-lg">
+                <div className="text-2xl font-bold font-mono">{String(val || 0).padStart(2,'0')}</div>
+                <div className="text-[10px] opacity-80 uppercase font-bold tracking-wider">{label}</div>
+            </div>
+        );
+
+        const Coupon = ({title, icon, desc}) => {
+            const [used, setUsed] = useState(false);
+            return (
+                <button onClick={() => setUsed(true)} disabled={used} className={`flex items-center p-5 rounded-2xl border-2 border-dashed transition-all w-full text-left shadow-sm ${used ? 'bg-gray-100 border-gray-300 opacity-60 grayscale' : 'bg-white border-red-300 hover:bg-red-50 hover:border-red-500 hover:shadow-md'}`}>
+                    <span className="text-4xl mr-5">{icon}</span>
+                    <div className="flex-1">
+                        <div className="font-bold text-gray-800 text-lg">{title}</div>
+                        <div className="text-xs text-gray-500">{desc}</div>
+                    </div>
+                    <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wide ${used ? 'bg-gray-300 text-gray-500' : 'bg-red-100 text-red-500'}`}>{used ? 'Redeemed' : 'Use'}</span>
+                </button>
+            )
+        };
+
+        const ReasonGenerator = () => {
+            const reasons = ["Your smile", "Your hugs", "You understand me", "Your laugh", "You support me", "You're my safe place", "How you look at me", "You're kind"];
+            const [reason, setReason] = useState("Click the heart!");
+            const [anim, setAnim] = useState(false);
+            const generate = () => {
+                setAnim(true);
+                setTimeout(() => {
+                    setReason(reasons[Math.floor(Math.random() * reasons.length)]);
+                    setAnim(false);
+                }, 200);
+            };
+            return (
+                <div className="mx-2 mb-10 animate-fade-in" style={{animationDelay: '0.7s'}}>
+                    <h2 className="text-3xl font-bold text-center text-pink-600 mb-6 font-serif">Why I Love You</h2>
+                    <div onClick={generate} className="bg-white/80 backdrop-blur-sm p-8 rounded-full shadow-xl w-64 h-64 mx-auto flex flex-col items-center justify-center relative cursor-pointer group border-4 border-pink-100 hover:scale-105 transition-transform">
+                        <Heart className={`text-red-500 fill-red-100 mb-4 transition-transform duration-200 ${anim ? 'scale-0' : 'scale-100 group-hover:scale-110'}`} size={48} />
+                        <p className={`font-medium text-gray-700 text-center px-2 transition-opacity duration-200 ${anim ? 'opacity-0' : 'opacity-100'}`}>{reason}</p>
+                        <span className="absolute bottom-6 text-xs text-gray-400 uppercase tracking-wider font-bold">Tap me</span>
+                    </div>
+                </div>
+            );
+        };
+
+        const TimelineItem = ({date, title, icon, desc, highlight, shayari}) => {
+            const now = new Date();
+            const isToday = now.getDate() === parseInt(date.split(' ')[1]) && now.getMonth() === 1; 
+            
+            return (
+                <div className={`flex flex-col p-4 rounded-2xl transition-all ${highlight ? 'bg-gradient-to-r from-red-500 to-pink-600 text-white shadow-xl scale-105' : 'bg-white shadow-sm border border-red-100'} ${isToday ? 'ring-4 ring-red-200 border-red-400' : ''}`}>
+                    <div className="flex items-center mb-2">
+                        <div className={`w-12 h-12 flex items-center justify-center rounded-full text-2xl mr-4 shadow-inner ${highlight ? 'bg-white/20' : 'bg-pink-50'}`}>{icon}</div>
+                        <div className="flex-1">
+                            <div className="font-bold text-base flex items-center gap-2">
+                                {title}
+                                {isToday && <span className="bg-red-600 text-white text-[10px] px-2 py-0.5 rounded-full animate-pulse">TODAY</span>}
+                            </div>
+                            <div className={`text-xs ${highlight ? 'text-red-100' : 'text-gray-500'}`}>{date}</div>
+                        </div>
+                    </div>
+                    <div className="pl-16">
+                         <div className={`text-sm italic font-serif mb-1 ${highlight ? 'text-white' : 'text-red-500'}`}>"{shayari}"</div>
+                         <div className={`text-xs ${highlight ? 'text-red-50' : 'text-gray-500'}`}>{desc}</div>
+                    </div>
+                </div>
+            )
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
+
